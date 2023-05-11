@@ -1,4 +1,9 @@
 server:
   port: 8080
 
+hbase:
+  zookeeper:
+    quorum:
 
+    property:
+      clientPort: 2181
