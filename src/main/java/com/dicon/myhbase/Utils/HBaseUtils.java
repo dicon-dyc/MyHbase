@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-
+@Component
 public class HBaseUtils {
 
     private Logger log =  LogManager.getLogger(com.dicon.myhbase.Utils.HBaseUtils.class);
@@ -23,31 +23,26 @@ public class HBaseUtils {
 
     private Configuration configuration = null;
 
-    private static com.dicon.myhbase.Utils.HBaseUtils HBaseUtils = new HBaseUtils();
 
-
-    private HBaseConfig HBaseConfig = new HBaseConfig();
-
-    private HBaseUtils(){
+    private HBaseUtils(HBaseConfig hbaseConfig){
 
         try {
-            Configuration configuration = HBaseConfig.getHBaseConfig();
+            Configuration configuration = hbaseConfig.getHBaseConfig();
             this.connection = ConnectionFactory.createConnection(configuration);
             this.admin = connection.getAdmin();
             log.info("---------------------admin" + admin);
         } catch (IOException e) {
-            log.error("获取hbase连接失败!");
+            log.error("获取hbase连接失败:{}",e.getMessage(),e);
         }
 
     }
 
-    public static com.dicon.myhbase.Utils.HBaseUtils getHBaseUtils(){
 
-        return HBaseUtils;
-
-    }
-
-
+    /**
+     *
+     * @param nameSpace
+     * @throws IOException
+     */
     public void createNamespace(String nameSpace) throws IOException {
 
         admin = connection.getAdmin();
