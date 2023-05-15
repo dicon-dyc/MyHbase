@@ -2,6 +2,7 @@ package com.dicon.myhbase.Controller;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.dicon.myhbase.Pojo.HbasePojo;
 import com.dicon.myhbase.Utils.HBaseUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -47,14 +48,14 @@ public class HBaseController {
      *     "tableName":"dyc:testTable"
      *     ,"families":["Column Family 1","Column Family 2"]
      * }
-     * @param jsonParam 输入的参数
+     * @param createTableParam 输入的参数
      * @throws IOException json解析
      */
     @RequestMapping(value = "/HBase/createTable",method = RequestMethod.POST)
     @ResponseBody
-    public void createTable(@RequestBody String jsonParam) throws IOException {
+    public void createTable(@RequestBody String createTableParam) throws IOException {
 
-        JSONObject jsonObject = JSONObject.parseObject(jsonParam);
+        JSONObject jsonObject = JSONObject.parseObject(createTableParam);
 
         String tableName = jsonObject.getString("tableName");
 
@@ -74,13 +75,13 @@ public class HBaseController {
      *     ,"columns":["column 1","column 2"]
      *     ,"values":["column 1  value","column 2 value"]
      * }
-     * @param upSertData
+     * @param upSertDataParam 需要插入的数据
      */
     @RequestMapping(value = "/HBase/upsertData",method = RequestMethod.POST)
     @ResponseBody
-    public void upsertData(@RequestBody String upSertData){
+    public void upsertData(@RequestBody String upSertDataParam){
 
-        JSONObject jsonObject = JSONObject.parseObject(upSertData);
+        JSONObject jsonObject = JSONObject.parseObject(upSertDataParam);
 
         String tableName = jsonObject.getString("tableName");
 
@@ -95,6 +96,30 @@ public class HBaseController {
         hbaseUtils.upsertData(tableName,rowKey,columnFamily,columns,values);
     }
 
+    /**
+     * 通过rowkey获取数据
+     *
+     * {
+     *     "tableName":"namespace:tablename"
+     *     ,"rowKey":"rowkey"
+     * }
+     *
+     * @param getDataByRowKeyParam 需要获取的数据的tablename & rowkey
+     * @return HbasePojo 返回结果
+     */
+    @RequestMapping(value = "/HBase/getDataByRowkey",method = RequestMethod.POST)
+    @ResponseBody
+    public List<HbasePojo> getDataByRowkey(@RequestBody String getDataByRowKeyParam){
+
+        JSONObject jsonObject = JSONObject.parseObject(getDataByRowKeyParam);
+
+        String tableName = jsonObject.getString("tableName");
+
+        String rowKey = jsonObject.getString("rowKey");
+
+        return hbaseUtils.getDataByRowKey(tableName,rowKey);
+
+    }
 
 
 }

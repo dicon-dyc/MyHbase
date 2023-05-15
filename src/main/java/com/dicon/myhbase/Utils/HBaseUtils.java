@@ -1,7 +1,9 @@
 package com.dicon.myhbase.Utils;
 
+import com.dicon.myhbase.Pojo.HbasePojo;
 import com.dicon.myhbase.config.HBaseConfig;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.NamespaceDescriptor;
 import org.apache.hadoop.hbase.TableName;
@@ -12,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -168,8 +171,7 @@ public class HBaseUtils {
 
             for (int i = 0; i < columns.length; i++) {
 
-                log.info("i:"+i+"columns:"+columns[i]+"values:"+values[i]);
-
+                log.info("插入或更新数据：columns:"+columns[i]+"values:"+values[i]);
 
                 put.addColumn(Bytes.toBytes(columnFamily),Bytes.toBytes(columns[i]),Bytes.toBytes(values[i]));
                 table.put(put);
@@ -177,7 +179,58 @@ public class HBaseUtils {
 
         } catch (IOException e) {
 
-            log.info("connection.getTable 获取连接失败");
+            log.info("upsertData:connection.getTable 获取连接失败");
+            throw new RuntimeException(e);
+        }
+
+
+    }
+
+    /**
+     * TODO:乱码问题待解决
+     * 查询指定rowkey的值
+     *
+     * @param tableName 需要查询的表名:"namespace:tablename"
+     * @param rowKey 需要查询的rowkey
+     * @return List<HbasePojo> 返回结果列表
+     */
+    @Deprecated
+    public List<HbasePojo> getDataByRowKey(String tableName,String rowKey){
+
+        try {
+
+            Table table = connection.getTable(TableName.valueOf(tableName));
+
+            Get get = new Get(rowKey.getBytes());
+
+            Result result = table.get(get);
+
+            List<HbasePojo> resultList = new ArrayList<>();
+
+
+            for (Cell cell : result.rawCells()){
+
+                HbasePojo hbasePojo = new HbasePojo();
+                hbasePojo.setTableName(tableName);
+                hbasePojo.setRowKey(rowKey);
+
+                //TODO 乱码
+                String columnsfamily = Bytes.toString(cell.getFamilyArray());
+                hbasePojo.setColumnsFamily(columnsfamily);
+
+                //TODO 乱码
+                String columns = Bytes.toString(cell.getQualifierArray());
+                hbasePojo.setColumns(columns);
+
+                //TODO 乱码
+                hbasePojo.setValues(Bytes.toString(cell.getValueArray()));
+                resultList.add(hbasePojo);
+            }
+
+            return resultList;
+            
+        } catch (IOException e) {
+            log.info("getData:connection.getTable 获取连接失败");
             throw new RuntimeException(e);
         }
 
