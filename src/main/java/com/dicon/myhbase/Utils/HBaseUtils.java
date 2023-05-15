@@ -6,6 +6,7 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.NamespaceDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
@@ -131,6 +132,54 @@ public class HBaseUtils {
 
         }
 
+    }
+
+
+    /**
+     * 插入或更新单个数据,无论单个数据或是多个数据都可以通过插入或更新多个数据方法来时间。
+     *
+     * @param tableName 要插入或更新数据的表名 "namespace:tablename"
+     * @param rowKey 要插入或更新的rowkey
+     * @param columnFamily 要插入或更新的列族
+     * @param column 要插入或更新的列
+     * @param value 要插入或更新的值
+     */
+    @Deprecated
+    public void upsertData(String tableName,String rowKey,String columnFamily,String column,String value){
+
+        this.upsertData(tableName,rowKey,columnFamily,new String[]{column},new String[]{value});
+    }
+
+    /**
+     * 插入或更新多个数据
+     *
+     * @param tableName 要插入或更新数据的表名 "namespace:tablename"
+     * @param rowKey 要插入或更新数据的rowkey
+     * @param columnFamily 要插入或更新数据的列族
+     * @param columns 要插入或更新数据的列集合
+     * @param values 要插入或更新数据的值集合
+     */
+    public void upsertData(String tableName,String rowKey,String columnFamily,String[] columns,String[] values){
+
+        try {
+            Table table = connection.getTable(TableName.valueOf(tableName));
+
+            Put put = new Put(Bytes.toBytes(rowKey));
+
+            for (int i = 0; i < columns.length; i++) {
+
+                log.info("i:"+i+"columns:"+columns[i]+"values:"+values[i]);
+
+
+                put.addColumn(Bytes.toBytes(columnFamily),Bytes.toBytes(columns[i]),Bytes.toBytes(values[i]));
+                table.put(put);
+            }
+
+        } catch (IOException e) {
+
+            log.info("connection.getTable 获取连接失败");
+            throw new RuntimeException(e);
+        }
 
 
     }

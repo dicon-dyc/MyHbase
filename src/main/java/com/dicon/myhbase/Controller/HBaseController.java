@@ -14,6 +14,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * @author:dyc
+ * @date:2023-05-13
+ */
 @RestController
 public class HBaseController {
 
@@ -22,6 +26,12 @@ public class HBaseController {
     @Autowired
     HBaseUtils hbaseUtils;
 
+    /**
+     * 创建namespace
+     * ?nameSpace=dyc
+     * @param nameSpace 需要创建的namespace
+     * @throws IOException
+     */
     @GetMapping("/HBase/createNameSpace")
     @ResponseBody
     public void createNamespace(@RequestParam("nameSpace") String nameSpace) throws IOException {
@@ -31,6 +41,15 @@ public class HBaseController {
     }
 
 
+    /**
+     * 创建table
+     * {
+     *     "tableName":"dyc:testTable"
+     *     ,"families":["Column Family 1","Column Family 2"]
+     * }
+     * @param jsonParam 输入的参数
+     * @throws IOException json解析
+     */
     @RequestMapping(value = "/HBase/createTable",method = RequestMethod.POST)
     @ResponseBody
     public void createTable(@RequestBody String jsonParam) throws IOException {
@@ -44,4 +63,38 @@ public class HBaseController {
         log.info("创建table: "+tableName+"列族: "+ Arrays.toString(families.toArray()));
         hbaseUtils.createTable(tableName,families);
     }
+
+
+    /**
+     * 插入或更新数据
+     * {
+     *     "tableName":"namespace:tablename"
+     *     ,"rowKey":"rowkey"
+     *     ,"columnsFamily":"columnsfamily"
+     *     ,"columns":["column 1","column 2"]
+     *     ,"values":["column 1  value","column 2 value"]
+     * }
+     * @param upSertData
+     */
+    @RequestMapping(value = "/HBase/upsertData",method = RequestMethod.POST)
+    @ResponseBody
+    public void upsertData(@RequestBody String upSertData){
+
+        JSONObject jsonObject = JSONObject.parseObject(upSertData);
+
+        String tableName = jsonObject.getString("tableName");
+
+        String rowKey = jsonObject.getString("rowKey");
+
+        String columnFamily = jsonObject.getString("columnsFamily");
+
+        String[] columns = jsonObject.getJSONArray("columns").toArray(new String[0]);
+
+        String[] values = jsonObject.getJSONArray("values").toArray(new String[0]);
+
+        hbaseUtils.upsertData(tableName,rowKey,columnFamily,columns,values);
+    }
+
+
+
 }
