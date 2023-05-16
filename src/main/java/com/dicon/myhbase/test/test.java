@@ -4,6 +4,7 @@ package com.dicon.myhbase.test;
 import com.alibaba.fastjson.JSONObject;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class test {
 //
@@ -62,6 +63,8 @@ public class test {
 
         String[] values = jsonObject.getJSONArray("values").toArray(new String[0]);
         System.out.println(Arrays.toString(values));
+
+        List<String> value = jsonObject.getJSONArray("values").toJavaList(String.class);
     }
 
 }

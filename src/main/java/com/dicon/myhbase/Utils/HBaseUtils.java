@@ -9,6 +9,7 @@ import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -75,7 +76,6 @@ public class HBaseUtils {
             throw new RuntimeException(e);
         }
 
-        admin.close();
 
     }
 
@@ -134,7 +134,6 @@ public class HBaseUtils {
 
             log.info("创建成功");
 
-            admin.close();
 
 
         }
@@ -287,5 +286,81 @@ public class HBaseUtils {
 
     }
 
+    /**
+     * 删除数据，可选删除表、rowkey、列族、列、值
+     *
+     * @param tableName 要删除的数据的表名
+     * @param rowKey
+     * @param columnsFamily
+     * @param columns
+     * @param values
+     * @throws IOException
+     */
+    @Deprecated
+    public void deleteData(String tableName,@Nullable String rowKey,@Nullable String columnsFamily,@Nullable String[] columns,@Nullable String[] values) throws IOException {
+
+
+        try {
+            boolean isExists = this.tableExists(tableName);
+            if (isExists == false){
+                return;
+            }
+        } catch (IOException e) {
+
+            log.error("deleteData 删除表失败,表："+tableName+"不存在");
+            throw new RuntimeException(e);
+        }
+
+        if (rowKey == null){
+
+            admin = connection.getAdmin();
+
+            try {
+                admin.disableTable(TableName.valueOf(tableName));
+                admin.deleteTable(TableName.valueOf(tableName));
+                return;
+            } catch (IOException e) {
+
+                log.error("删除表失败："+tableName);
+                throw new RuntimeException(e);
+            }
+        }
+        //TODO 删除rowkey、列族、列、值
+
+
+    }
+
+    /**
+     * 删除表
+     *
+     * @param tableName 要删除的表
+     * @throws IOException 创建连接失败
+     */
+    public void deleteTable(String tableName) throws IOException {
+
+        try {
+            boolean isExists = this.tableExists(tableName);
+            if (!isExists){
+                return;
+            }
+        } catch (IOException e) {
+
+            log.error("deleteData 删除表失败,表："+tableName+"不存在");
+            throw new RuntimeException(e);
+        }
+
+        admin = connection.getAdmin();
+
+        try {
+
+            admin.disableTable(TableName.valueOf(tableName));
+            admin.deleteTable(TableName.valueOf(tableName));
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
+    }
 
 }

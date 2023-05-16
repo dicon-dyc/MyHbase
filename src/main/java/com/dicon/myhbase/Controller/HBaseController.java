@@ -48,7 +48,7 @@ public class HBaseController {
      *     "tableName":"dyc:testTable"
      *     ,"families":["Column Family 1","Column Family 2"]
      * }
-     * @param createTableParam 输入的参数
+     * @param createTableParam json格式输入的参数
      * @throws IOException json解析
      */
     @RequestMapping(value = "/HBase/createTable",method = RequestMethod.POST)
@@ -75,7 +75,7 @@ public class HBaseController {
      *     ,"columns":["column 1","column 2"]
      *     ,"values":["column 1  value","column 2 value"]
      * }
-     * @param upSertDataParam 需要插入的数据
+     * @param upSertDataParam json格式需要插入的数据
      */
     @RequestMapping(value = "/HBase/upsertData",method = RequestMethod.POST)
     @ResponseBody
@@ -104,7 +104,7 @@ public class HBaseController {
      *     ,"rowKey":"rowkey"
      * }
      *
-     * @param getDataByRowKeyParam 需要获取的数据的tablename & rowkey
+     * @param getDataByRowKeyParam json格式需要获取的数据的tablename & rowkey
      * @return HbasePojo 返回结果
      */
     @RequestMapping(value = "/HBase/getDataByRowkey",method = RequestMethod.POST)
@@ -122,16 +122,22 @@ public class HBaseController {
     }
 
     /**
+     * rowkey范围查询数据
+     * {
+     *     "tableName":"dyc:testTable"
+     *     ,"startRowKey":"Column Family 1:col1"
+     *     ,"endRowKey":"dyc02"
+     * }
      *
-     * @param scanData
-     * @return
-     * @throws IOException
+     * @param scanDataParam json格式需要获取的tablename 和 startrowkey & endrowkey
+     * @return 返回查询结果
+     * @throws IOException 创建连接失败
      */
     @RequestMapping(value = "/HBase/scanData",method = RequestMethod.POST)
     @ResponseBody
-    public List<HbasePojo> scanData(@RequestBody String scanData) throws IOException {
+    public List<HbasePojo> scanData(@RequestBody String scanDataParam) throws IOException {
 
-        JSONObject jsonObject = JSONObject.parseObject(scanData);
+        JSONObject jsonObject = JSONObject.parseObject(scanDataParam);
 
         String tableName = jsonObject.getString("tableName");
 
@@ -142,5 +148,22 @@ public class HBaseController {
         return hbaseUtils.scanData(tableName,startRowKey,endRowKey);
     }
 
+    /**
+     * 删除表
+     *
+     *
+     * @param deleteTableParam json格式需要获取的tableName
+     * @throws IOException
+     */
+    @RequestMapping("/HBase/deleteTable")
+    @ResponseBody
+    public void deleteTable(@RequestBody String deleteTableParam) throws IOException {
+
+        JSONObject jsonObject = JSONObject.parseObject(deleteTableParam);
+
+        String tableName = jsonObject.getString("tableName");
+
+        hbaseUtils.deleteTable(tableName);
+    }
 
 }
