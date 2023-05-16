@@ -2,6 +2,7 @@ package com.dicon.myhbase.Utils;
 
 import com.dicon.myhbase.Pojo.HbasePojo;
 import com.dicon.myhbase.config.HBaseConfig;
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
@@ -22,6 +23,7 @@ import java.util.List;
 public class HBaseUtils {
 
     private final Logger log =  LogManager.getLogger(com.dicon.myhbase.Utils.HBaseUtils.class);
+
     private Connection connection = null;
 
     private Admin admin = null;
@@ -65,7 +67,13 @@ public class HBaseUtils {
 
         NamespaceDescriptor build = builder.build();
 
-        admin.createNamespace(build);
+        try {
+            admin.createNamespace(build);
+        } catch (IOException e) {
+
+            log.error("createNamespace创建失败："+nameSpace);
+            throw new RuntimeException(e);
+        }
 
         admin.close();
 
@@ -149,6 +157,7 @@ public class HBaseUtils {
         this.upsertData(tableName,rowKey,columnFamily,new String[]{column},new String[]{value});
     }
 
+
     /**
      * 插入或更新多个数据
      *
@@ -172,6 +181,8 @@ public class HBaseUtils {
                 put.addColumn(Bytes.toBytes(columnFamily),Bytes.toBytes(columns[i]),Bytes.toBytes(values[i]));
                 table.put(put);
             }
+
+            table.close();
 
         } catch (IOException e) {
 
@@ -218,7 +229,9 @@ public class HBaseUtils {
                 hbasePojo.setValues(Bytes.toString(CellUtil.cloneValue(cell)));
 
                 resultList.add(hbasePojo);
+
             }
+            table.close();
 
             return resultList;
             
@@ -227,7 +240,52 @@ public class HBaseUtils {
             throw new RuntimeException(e);
         }
 
+    }
 
+
+    /**
+     * 扫描获取数据
+     *
+     * @param tableName 要扫描的表 "namespace:tablename"
+     * @param startRowKey 起始rowkey
+     * @param endRowKey 结束rowkey(不包含结束rowkey)
+     * @return 结果集合
+     * @throws IOException io异常，连接表失败
+     */
+    public List<HbasePojo> scanData(String tableName,String startRowKey,String endRowKey) throws IOException {
+
+        Scan scan = new Scan();
+        scan.withStartRow(Bytes.toBytes(startRowKey));
+
+        //扫描数据左闭右开，不包含endRowKey
+        scan.withStopRow(Bytes.toBytes(endRowKey));
+
+        Table table = connection.getTable(TableName.valueOf(tableName));
+
+        List<HbasePojo> hbasePojoList = new ArrayList<>();
+
+        try {
+            ResultScanner scanner = table.getScanner(scan);
+
+            for (Result result : scanner){
+
+                String rowKey = Bytes.toString(result.getRow());
+                hbasePojoList.addAll(this.getDataByRowKey(tableName,rowKey));
+            }
+
+            scanner.close();
+
+            table.close();
+
+            return hbasePojoList;
+
+        } catch (IOException e) {
+
+            log.error("scanData连接表失败:"+tableName+"startRowKey:"+startRowKey+"endRowKey"+endRowKey);
+            throw new RuntimeException(e);
+        }
 
     }
+
+
 }

@@ -121,5 +121,26 @@ public class HBaseController {
 
     }
 
+    /**
+     *
+     * @param scanData
+     * @return
+     * @throws IOException
+     */
+    @RequestMapping(value = "/HBase/scanData",method = RequestMethod.POST)
+    @ResponseBody
+    public List<HbasePojo> scanData(@RequestBody String scanData) throws IOException {
+
+        JSONObject jsonObject = JSONObject.parseObject(scanData);
+
+        String tableName = jsonObject.getString("tableName");
+
+        String startRowKey = jsonObject.getString("startRowKey");
+
+        String endRowKey = jsonObject.getString("endRowKey");
+
+        return hbaseUtils.scanData(tableName,startRowKey,endRowKey);
+    }
+
 
 }
