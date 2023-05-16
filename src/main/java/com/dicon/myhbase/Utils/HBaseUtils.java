@@ -3,10 +3,7 @@ package com.dicon.myhbase.Utils;
 import com.dicon.myhbase.Pojo.HbasePojo;
 import com.dicon.myhbase.config.HBaseConfig;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.NamespaceDescriptor;
-import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.logging.log4j.LogManager;
@@ -14,7 +11,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -187,14 +183,12 @@ public class HBaseUtils {
     }
 
     /**
-     * TODO:乱码问题待解决
      * 查询指定rowkey的值
      *
      * @param tableName 需要查询的表名:"namespace:tablename"
      * @param rowKey 需要查询的rowkey
      * @return List<HbasePojo> 返回结果列表
      */
-    @Deprecated
     public List<HbasePojo> getDataByRowKey(String tableName,String rowKey){
 
         try {
@@ -211,19 +205,18 @@ public class HBaseUtils {
             for (Cell cell : result.rawCells()){
 
                 HbasePojo hbasePojo = new HbasePojo();
+
                 hbasePojo.setTableName(tableName);
+
                 hbasePojo.setRowKey(rowKey);
 
-                //TODO 乱码
-                String columnsfamily = Bytes.toString(cell.getFamilyArray());
-                hbasePojo.setColumnsFamily(columnsfamily);
+                //CellUtil解决乱码问题
+                hbasePojo.setColumnsFamily(Bytes.toString(CellUtil.cloneFamily(cell)));
 
-                //TODO 乱码
-                String columns = Bytes.toString(cell.getQualifierArray());
-                hbasePojo.setColumns(columns);
+                hbasePojo.setColumns(Bytes.toString(CellUtil.cloneQualifier(cell)));
 
-                //TODO 乱码
-                hbasePojo.setValues(Bytes.toString(cell.getValueArray()));
+                hbasePojo.setValues(Bytes.toString(CellUtil.cloneValue(cell)));
+
                 resultList.add(hbasePojo);
             }
 
@@ -233,6 +226,7 @@ public class HBaseUtils {
             log.info("getData:connection.getTable 获取连接失败");
             throw new RuntimeException(e);
         }
+
 
 
     }
