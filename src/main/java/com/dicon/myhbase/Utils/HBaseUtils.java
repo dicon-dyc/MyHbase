@@ -9,6 +9,7 @@ import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
@@ -287,6 +288,7 @@ public class HBaseUtils {
     }
 
     /**
+     * @Deprecated: 考虑使用重载或抽象封装一层。
      * 删除数据，可选删除表、rowkey、列族、列、值
      *
      * @param tableName 要删除的数据的表名
@@ -362,5 +364,87 @@ public class HBaseUtils {
 
 
     }
+
+    /**
+     * 删除rowkey
+     *
+     * @param tableName 需要删除的rowkey的表名
+     * @param rowKey 需要删除的rowkey
+     * @throws IOException 连接表异常
+     */
+    public void deleteRowKey(String tableName,String rowKey) throws IOException {
+
+        Table table = connection.getTable(TableName.valueOf(tableName));
+
+        Delete delete = new Delete(rowKey.getBytes());
+
+
+        try {
+            table.delete(delete);
+        } catch (IOException e) {
+
+            log.error("deleteRowKey,删除rowkey失败,tablename:"+tableName+"RowKey:"+rowKey);
+            throw new RuntimeException(e);
+        }
+
+        table.close();
+    }
+
+    /**
+     * 删除列族
+     *
+     * @param tableName 需要删除的列族的表名
+     * @param rowKey 需要删除的列族的rowkey
+     * @param columnsFamily 需要删除的列族
+     */
+    public void deleteColumnFamily(String tableName,String rowKey,String columnsFamily) throws IOException {
+
+        Table table = connection.getTable(TableName.valueOf(tableName));
+
+        Delete delete = new Delete(rowKey.getBytes());
+
+        delete.addFamily(Bytes.toBytes(columnsFamily));
+
+        try {
+            table.delete(delete);
+        } catch (IOException e) {
+
+            log.error("deleteColumnFamily,删除列族失败");
+            throw new RuntimeException(e);
+        }
+
+        table.close();
+
+    }
+
+    /**
+     * 删除列
+     *
+     * @param tableName 需要删除的列的表名
+     * @param rowKey 需要删除的列的rowKey
+     * @param columnsFamily 需要删除的列的列族
+     * @param column 需要删除的列
+     * @throws IOException
+     */
+    public void deleteColumn(String tableName, @NotNull String rowKey, String columnsFamily, String column) throws IOException {
+
+        Table table = connection.getTable(TableName.valueOf(tableName));
+
+        Delete delete = new Delete(rowKey.getBytes());
+
+        delete.addColumn(Bytes.toBytes(columnsFamily),Bytes.toBytes(column));
+
+        try {
+            table.delete(delete);
+        } catch (IOException e) {
+
+            log.error("deleteColumn失败，tablename:"+tableName+" rowKey:"+rowKey+" columnsFamily:"+columnsFamily+" column:"+column);
+            throw new RuntimeException(e);
+        }
+
+        table.close();
+    }
+
+
 
 }

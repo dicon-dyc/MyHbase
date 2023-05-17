@@ -1,0 +1,6 @@
+创建表
+create "namespace:tablename","columns family 1","column family 2"
+
+添加数据
+put "namespace:tablename","rowkey","columns family 1:column","value"
+
